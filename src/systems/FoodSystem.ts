@@ -43,15 +43,26 @@ export const FoodSystem: System = {
       }
     })
 
-    // Spawn new food this tick
+    // Spawn new food in clustered patches
     const { prng } = engine
     const spawnCount = Math.floor(engine.baseFoodSpawnRate * engine.worldEventFoodMod)
-    for (let s = 0; s < spawnCount; s++) {
-      if (food.count >= food.alive.length) break
-      const fx = prng.nextRange(0, WORLD_W)
-      const fy = prng.nextRange(0, WORLD_H)
-      const fv = prng.nextRange(5, 30)
-      food.spawn(fx, fy, fv)
+    if (spawnCount > 0) {
+      const numPatches = 3 + Math.floor(prng.nextFloat() * 3)
+      const patchCx = new Float32Array(numPatches)
+      const patchCy = new Float32Array(numPatches)
+      for (let p = 0; p < numPatches; p++) {
+        patchCx[p] = prng.nextRange(0, WORLD_W)
+        patchCy[p] = prng.nextRange(0, WORLD_H)
+      }
+      for (let s = 0; s < spawnCount; s++) {
+        if (food.count >= food.alive.length) break
+        const p = Math.floor(prng.nextFloat() * numPatches)
+        const angle = prng.nextFloat() * Math.PI * 2
+        const dist = prng.nextFloat() * 100
+        const fx = Math.max(0, Math.min(WORLD_W, patchCx[p] + Math.cos(angle) * dist))
+        const fy = Math.max(0, Math.min(WORLD_H, patchCy[p] + Math.sin(angle) * dist))
+        food.spawn(fx, fy, prng.nextRange(5, 30))
+      }
     }
   },
 }

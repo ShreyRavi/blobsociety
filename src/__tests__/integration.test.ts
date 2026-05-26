@@ -107,6 +107,14 @@ function makeEngine(seed: number, blobCount = 50): SimEngine {
     setPaused: () => {},
     setSpeed: () => {},
     subscribe: () => () => {},
+    spawnBlobAt: () => {},
+    dropFoodAt: () => {},
+    respawnBlobs: () => {},
+    feedBlob: () => {},
+    setBlobSpeed: () => {},
+    setBlobAggression: () => {},
+    setBlobDietFloat: () => {},
+    triggerWorldEvent: () => {},
   }
 
   return engine

@@ -2,7 +2,7 @@ import type { SimSnapshot } from '../engine/SimEngine'
 import { PinchZoom } from './PinchZoom'
 import { WORLD_W, WORLD_H, PHERO_W, PHERO_H, PHERO_CHANNELS } from '../engine/constants'
 
-const BASE_RADIUS = 4
+const BASE_RADIUS = 8
 const SPECIES_PALETTE = new Map<number, string>()
 const bySpeciesCache = new Map<number, number[]>()
 

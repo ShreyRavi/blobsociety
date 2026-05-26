@@ -5,7 +5,7 @@ import { ControlSheet } from './ui/ControlSheet'
 import { BlobCard } from './ui/BlobCard'
 import { DebugOverlay } from './ui/DebugOverlay'
 import { getEngine } from './engine/SimEngine'
-import { selectBlob, useSelectedBlob, useSimSnapshot } from './store/simStore'
+import { selectBlob, useSelectedBlob, useSimSnapshot, spawnBlobAtWorld, dropFoodAtWorld, respawnBlobs } from './store/simStore'
 
 function SimCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -26,28 +26,42 @@ function SimCanvas() {
     const engine = getEngine()
     engine.start()
 
-    // Canvas click → select blob
-    const onClick = (e: MouseEvent) => {
+    const getWorldCoords = (e: MouseEvent): [number, number] => {
       const rect = canvas.getBoundingClientRect()
       const cx = e.clientX - rect.left
       const cy = e.clientY - rect.top
-      const pz = renderer.getPinchZoom()
-      const [wx, wy] = pz.canvasToWorld(cx, cy)
+      return renderer.getPinchZoom().canvasToWorld(cx, cy)
+    }
 
+    // Left-click: select blob; Shift+click: drop food
+    const onClick = (e: MouseEvent) => {
+      const [wx, wy] = getWorldCoords(e)
+      if (e.shiftKey) {
+        dropFoodAtWorld(wx, wy)
+        return
+      }
       const buf = engine.readBuf
       let bestId: number | null = null
-      let bestD2 = 400  // ~20px click radius in world coords
+      let bestD2 = 625  // ~25px click radius in world coords
       for (let i = 0; i < buf.alive.length; i++) {
         if (!buf.alive[i]) continue
         const dx = buf.x[i] - wx
         const dy = buf.y[i] - wy
-        const r = 4 * buf.size[i]
+        const r = 8 * buf.size[i]
         const d2 = dx * dx + dy * dy
         if (d2 < bestD2 + r * r) { bestD2 = d2; bestId = i }
       }
       selectBlob(bestId)
     }
     canvas.addEventListener('click', onClick)
+
+    // Right-click: spawn blob at cursor
+    const onContextMenu = (e: MouseEvent) => {
+      e.preventDefault()
+      const [wx, wy] = getWorldCoords(e)
+      spawnBlobAtWorld(wx, wy)
+    }
+    canvas.addEventListener('contextmenu', onContextMenu)
 
     // Keyboard shortcuts
     const onKey = (e: KeyboardEvent) => {
@@ -60,6 +74,7 @@ function SimCanvas() {
       engine.stop()
       renderer.destroy()
       canvas.removeEventListener('click', onClick)
+      canvas.removeEventListener('contextmenu', onContextMenu)
       window.removeEventListener('keydown', onKey)
     }
   }, [])
@@ -102,6 +117,17 @@ function SimCanvas() {
 }
 
 function ExtinctionBanner() {
+  const [countdown, setCountdown] = useState(3)
+
+  useEffect(() => {
+    if (countdown <= 0) {
+      respawnBlobs(20)
+      return
+    }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [countdown])
+
   return (
     <div
       style={{
@@ -117,30 +143,30 @@ function ExtinctionBanner() {
         fontSize: 13,
         textAlign: 'center',
         backdropFilter: 'blur(6px)',
-        border: '1px solid #333',
+        border: '1px solid #ff6b6b',
+        minWidth: 220,
       }}
     >
-      <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>
-        All blobs have gone extinct
+      <div style={{ fontSize: 16, fontWeight: 700, color: '#ff6b6b', marginBottom: 6 }}>
+        Extinction event
       </div>
-      <div style={{ color: '#888', marginBottom: 14 }}>
-        The population did not survive. The world continues.
+      <div style={{ color: '#aaa', marginBottom: 14 }}>
+        {countdown > 0 ? `Respawning in ${countdown}…` : 'Respawning…'}
       </div>
       <button
-        onClick={() => location.reload()}
+        onClick={() => { respawnBlobs(20); setCountdown(0) }}
         style={{
-          background: '#7c4dff',
-          border: 'none',
-          color: '#fff',
+          background: 'rgba(255,255,255,0.08)',
+          border: '1px solid #555',
+          color: '#ccc',
           borderRadius: 20,
-          padding: '6px 20px',
+          padding: '4px 16px',
           cursor: 'pointer',
-          fontSize: 13,
+          fontSize: 12,
           fontFamily: 'monospace',
-          fontWeight: 600,
         }}
       >
-        Restart simulation
+        Respawn now
       </button>
     </div>
   )

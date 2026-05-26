@@ -14,11 +14,11 @@ export const PHERO_CHANNELS = 4
 export const SPECIATION_INTERVAL = 60
 export const SPECIATION_DISTANCE_THRESHOLD = 2.0
 export const RAF_DT_MAX = 50
-export const REPRODUCTION_THRESHOLD = 70
-export const REPRODUCTION_COOLDOWN = 300
+export const REPRODUCTION_THRESHOLD = 60
+export const REPRODUCTION_COOLDOWN = 150
 export const BASE_LIFESPAN = 3000
-export const BASE_FOOD_RATE = 2
-export const INITIAL_FOOD_COUNT = 150
+export const BASE_FOOD_RATE = 8
+export const INITIAL_FOOD_COUNT = 300
 export const MEMORY_SNAPSHOT_HZ = 6
 
 // Biome IDs

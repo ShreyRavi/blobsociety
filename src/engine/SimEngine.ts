@@ -11,6 +11,7 @@ import type { SystemRegistration } from './System'
 import {
   INITIAL_BLOB_COUNT,
   INITIAL_FOOD_COUNT,
+  MAX_BLOB_COUNT,
   WORLD_W,
   WORLD_H,
   BASE_FOOD_RATE,
@@ -74,6 +75,14 @@ export interface SimEngine {
   setPaused(p: boolean): void
   setSpeed(s: number): void
   subscribe(cb: (snapshot: SimSnapshot) => void): () => void
+  spawnBlobAt(x: number, y: number): void
+  dropFoodAt(x: number, y: number, count?: number): void
+  respawnBlobs(count?: number): void
+  feedBlob(id: number, amount?: number): void
+  setBlobSpeed(id: number, v: number): void
+  setBlobAggression(id: number, v: number): void
+  setBlobDietFloat(id: number, v: number): void
+  triggerWorldEvent(name: string): void
 }
 
 
@@ -97,7 +106,7 @@ function spawnInitialBlobs(engine: SimEngine): void {
     buf.traitFear[i] = prng.nextRange(0.1, 0.6)
     buf.courage[i] = prng.nextRange(0.2, 0.8)
     buf.fertility[i] = prng.nextRange(0.3, 0.7)
-    buf.metabolism[i] = prng.nextRange(0.08, 0.4)
+    buf.metabolism[i] = prng.nextRange(0.05, 0.15)
     buf.camouflage[i] = prng.nextRange(0, 0.6)
     buf.spikiness[i] = prng.nextRange(0, 0.5)
     buf.size[i] = prng.nextRange(0.4, 1.2)
@@ -154,6 +163,95 @@ function computeSpeciesCounts(readBuf: StateBuffer): Map<number, number> {
   return counts
 }
 
+function initBlobSlot(buf: StateBuffer, slot: number, x: number, y: number, prng: PRNG): void {
+  buf.x[slot] = x
+  buf.y[slot] = y
+  buf.vx[slot] = prng.nextRange(-1, 1)
+  buf.vy[slot] = prng.nextRange(-1, 1)
+  buf.energy[slot] = 70
+  buf.age[slot] = 0
+  buf.hunger[slot] = 0.3
+  buf.speed[slot] = prng.nextRange(0.5, 1.5)
+  buf.strength[slot] = prng.nextRange(0.3, 0.7)
+  buf.defense[slot] = prng.nextRange(0.3, 0.7)
+  buf.visionRadius[slot] = prng.nextRange(40, 90)
+  buf.aggression[slot] = prng.nextRange(0.1, 0.7)
+  buf.sociability[slot] = prng.nextRange(0.2, 0.8)
+  buf.traitCuriosity[slot] = prng.nextRange(0.2, 0.8)
+  buf.traitFear[slot] = prng.nextRange(0.1, 0.6)
+  buf.courage[slot] = prng.nextRange(0.2, 0.8)
+  buf.fertility[slot] = prng.nextRange(0.3, 0.7)
+  buf.metabolism[slot] = prng.nextRange(0.05, 0.15)
+  buf.camouflage[slot] = prng.nextRange(0, 0.6)
+  buf.spikiness[slot] = prng.nextRange(0, 0.5)
+  buf.size[slot] = prng.nextRange(0.4, 1.2)
+  buf.dietFloat[slot] = prng.nextFloat()
+  buf.diet[slot] = deriveDiet(buf.dietFloat[slot])
+  buf.mutationRate[slot] = prng.nextRange(0.05, 0.3)
+  buf.emotionFear[slot] = 0.2
+  buf.emotionConfidence[slot] = 0.5
+  buf.emotionStress[slot] = 0.1
+  buf.emotionCuriosity[slot] = 0.5
+  buf.parentId[slot] = 0xffffffff
+  buf.generation[slot] = 0
+  buf.reproductionCooldown[slot] = 50
+  buf.species[slot] = 1
+  buf.alive[slot] = 1
+  buf.count++
+}
+
+function findFreeSlot(engine: SimEngine): number {
+  if (engine.freeList.length > 0) return engine.freeList.pop()!
+  const buf = engine.readBuf
+  for (let i = 0; i < MAX_BLOB_COUNT; i++) {
+    if (!buf.alive[i]) return i
+  }
+  return -1
+}
+
+function spawnBlobAtImpl(engine: SimEngine, x: number, y: number): void {
+  if (engine.readBuf.count >= MAX_BLOB_COUNT) return
+  const slot = findFreeSlot(engine)
+  if (slot === -1) return
+  initBlobSlot(engine.readBuf, slot, x, y, engine.prng)
+}
+
+function dropFoodAtImpl(engine: SimEngine, x: number, y: number, count = 5): void {
+  for (let i = 0; i < count; i++) {
+    const angle = engine.prng.nextFloat() * Math.PI * 2
+    const dist = engine.prng.nextFloat() * 40
+    const fx = Math.max(0, Math.min(WORLD_W, x + Math.cos(angle) * dist))
+    const fy = Math.max(0, Math.min(WORLD_H, y + Math.sin(angle) * dist))
+    engine.foodPool.spawn(fx, fy, engine.prng.nextRange(15, 30))
+  }
+}
+
+function respawnBlobsImpl(engine: SimEngine, count = 20): void {
+  engine.freeList.length = 0
+  for (let k = 0; k < count; k++) {
+    if (engine.readBuf.count >= MAX_BLOB_COUNT) break
+    const slot = findFreeSlot(engine)
+    if (slot === -1) break
+    const x = engine.prng.nextRange(50, WORLD_W - 50)
+    const y = engine.prng.nextRange(50, WORLD_H - 50)
+    initBlobSlot(engine.readBuf, slot, x, y, engine.prng)
+  }
+}
+
+const WORLD_EVENT_MAP: Record<string, { foodMod: number; duration: number }> = {
+  drought: { foodMod: 0.15, duration: 250 },
+  bloom:   { foodMod: 3.0,  duration: 100 },
+  plague:  { foodMod: 0.05, duration: 180 },
+}
+
+function triggerWorldEventImpl(engine: SimEngine, name: string): void {
+  const ev = WORLD_EVENT_MAP[name]
+  if (!ev) return
+  engine.worldEventFoodMod = ev.foodMod
+  engine.worldEventEndTick = engine.tick + ev.duration
+  engine.currentWorldEvent = name
+}
+
 function createEngine(seed: number): SimEngine {
   const prng = new PRNG(seed)
 
@@ -189,6 +287,14 @@ function createEngine(seed: number): SimEngine {
     setPaused,
     setSpeed,
     subscribe,
+    spawnBlobAt: (x, y) => spawnBlobAtImpl(engine, x, y),
+    dropFoodAt: (x, y, count) => dropFoodAtImpl(engine, x, y, count),
+    respawnBlobs: (count) => respawnBlobsImpl(engine, count),
+    feedBlob: (id, amount) => { engine.readBuf.energy[id] = Math.min(100, engine.readBuf.energy[id] + (amount ?? 20)); engine.readBuf.hunger[id] = 1 - engine.readBuf.energy[id] / 100 },
+    setBlobSpeed: (id, v) => { engine.readBuf.speed[id] = Math.max(0.1, Math.min(3, v)) },
+    setBlobAggression: (id, v) => { engine.readBuf.aggression[id] = Math.max(0, Math.min(1, v)) },
+    setBlobDietFloat: (id, v) => { engine.readBuf.dietFloat[id] = Math.max(0, Math.min(1, v)); engine.readBuf.diet[id] = deriveDiet(v) },
+    triggerWorldEvent: (name) => triggerWorldEventImpl(engine, name),
   }
 
   spawnInitialBlobs(engine)

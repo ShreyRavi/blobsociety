@@ -55,3 +55,35 @@ export function setPaused(p: boolean): void {
 export function setSpeed(s: number): void {
   getEngine().setSpeed(s)
 }
+
+export function spawnBlobAtWorld(x: number, y: number): void {
+  getEngine().spawnBlobAt(x, y)
+}
+
+export function dropFoodAtWorld(x: number, y: number): void {
+  getEngine().dropFoodAt(x, y)
+}
+
+export function respawnBlobs(count?: number): void {
+  getEngine().respawnBlobs(count)
+}
+
+export function feedBlob(id: number): void {
+  getEngine().feedBlob(id)
+}
+
+export function setBlobSpeed(id: number, v: number): void {
+  getEngine().setBlobSpeed(id, v)
+}
+
+export function setBlobAggression(id: number, v: number): void {
+  getEngine().setBlobAggression(id, v)
+}
+
+export function setBlobDietFloat(id: number, v: number): void {
+  getEngine().setBlobDietFloat(id, v)
+}
+
+export function triggerWorldEvent(name: string): void {
+  getEngine().triggerWorldEvent(name)
+}
