@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# Blob Society
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A real-time evolution simulation. Blobs eat, fight, reproduce, and go extinct. Watch natural selection play out in your browser.
 
-Currently, two official plugins are available:
+## What it does
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+200 blobs spawn with randomized traits — speed, strength, diet, aggression, sociability, metabolism, and more. They perceive their environment, form emotions, remember interactions, and act accordingly. Species diverge through genetic drift. Populations collapse.
 
-## React Compiler
+**Systems running each tick:**
+- Pheromones (food trails, danger signals, territory marking, mating calls)
+- Perception (spatial hash neighbor lookup)
+- Emotions (fear, confidence, stress, curiosity)
+- Memory (trust/fear relationships between individuals)
+- Interactions (flee, hunt, share food, follow)
+- Combat, Food foraging, Biome effects
+- Reproduction (energy-gated, mutation, inheritance)
+- Aging + speciation + world events
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+**Biomes:** Grassland, Forest, Desert, Toxic — each with different energy modifiers.
 
-## Expanding the ESLint configuration
+## Controls
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+| Input | Action |
+|-------|--------|
+| Click blob | Select — shows stats panel |
+| `P` | Pause / Resume |
+| `Escape` | Deselect blob |
+| Speed slider | 1× – 10× simulation speed |
+| Debug › Pheromone overlay | Visualize chemical signals |
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Stack
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- **React + TypeScript** — UI layer only (stats, blob card, controls)
+- **Canvas 2D** — all rendering, pinch-zoom/pan
+- **Valtio** — reactive simulation state
+- **Vite** — build + dev server
+- **Vitest** — 119 unit tests across all ECS systems
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Development
+
+```bash
+npm install
+npm run dev        # http://localhost:5173/blobsociety/
+npm test           # run all 119 tests
+npm run build      # production build → dist/
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Architecture
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
 ```
+src/
+├── engine/         # Core: StateBuffer (SoA typed arrays), PRNG, constants
+├── systems/        # ECS systems: one update() per concern
+│   └── __tests__/  # unit tests per system
+├── renderer/       # CanvasRenderer + PinchZoom
+├── store/          # Valtio sim state bridge
+└── ui/             # React panels: StatsPanel, BlobCard, ControlSheet, DebugOverlay
+```
+
+State lives in `StateBuffer` — flat typed arrays (Float32Array, Uint8Array) for 33 fields across up to 256 blobs. Double-buffered: systems read from `readBuf`, write to `writeBuf`, swap each tick.
+
+## License
+
+MIT
