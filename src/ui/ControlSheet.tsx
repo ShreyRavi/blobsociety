@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useSimSnapshot, setPaused, setSpeed } from '../store/simStore'
 
 export function ControlSheet() {
   const snap = useSimSnapshot()
+  const [hovered, setHovered] = useState(false)
   if (!snap) return null
 
   const paused = snap.paused
@@ -28,8 +30,10 @@ export function ControlSheet() {
     >
       <button
         onClick={() => setPaused(!paused)}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
         style={{
-          background: 'none',
+          background: hovered ? 'rgba(255,255,255,0.1)' : 'none',
           border: '1px solid #555',
           color: '#fff',
           borderRadius: 20,
@@ -37,6 +41,7 @@ export function ControlSheet() {
           cursor: 'pointer',
           fontSize: 13,
           fontFamily: 'monospace',
+          transition: 'background 0.15s',
         }}
       >
         {paused ? '▶ Play' : '⏸ Pause'}
