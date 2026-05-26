@@ -18,7 +18,6 @@ export function BlobCard() {
   const b = snap.readBuf
   const i = selectedId
   const dietNames = ['Herbivore', 'Omnivore', 'Carnivore', 'Scavenger']
-  const actionHistory = snap ? [] : []  // future: last N actions from log
 
   return (
     <div
@@ -70,16 +69,6 @@ export function BlobCard() {
       <BRow label="Stress" value={b.emotionStress[i].toFixed(2)} bar={bar(b.emotionStress[i])} color="#ffcc02" />
       <BRow label="Curiosity" value={b.emotionCuriosity[i].toFixed(2)} bar={bar(b.emotionCuriosity[i])} color="#80cbc4" />
 
-      {actionHistory.length > 0 && (
-        <>
-          <div style={{ borderTop: '1px solid #333', marginTop: 8, paddingTop: 6, color: '#888', fontSize: 10 }}>
-            Recent actions
-          </div>
-          {actionHistory.map((a, idx) => (
-            <div key={idx} style={{ color: '#bbb', lineHeight: 1.5 }}>{a}</div>
-          ))}
-        </>
-      )}
     </div>
   )
 }

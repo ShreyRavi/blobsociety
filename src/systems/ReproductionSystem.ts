@@ -7,21 +7,10 @@ import {
   MAX_BLOB_COUNT,
   REPRODUCTION_THRESHOLD,
   REPRODUCTION_COOLDOWN,
-  DIET_HERBIVORE_MAX,
-  DIET_OMNIVORE_MAX,
-  DIET_CARNIVORE_MAX,
-  DIET_HERBIVORE,
-  DIET_OMNIVORE,
-  DIET_CARNIVORE,
-  DIET_SCAVENGER,
+  WORLD_W,
+  WORLD_H,
 } from '../engine/constants'
-
-function deriveDiet(dietFloat: number): number {
-  if (dietFloat < DIET_HERBIVORE_MAX) return DIET_HERBIVORE
-  if (dietFloat < DIET_OMNIVORE_MAX) return DIET_OMNIVORE
-  if (dietFloat < DIET_CARNIVORE_MAX) return DIET_CARNIVORE
-  return DIET_SCAVENGER
-}
+import { deriveDiet } from '../engine/diet'
 
 function mutateTrait(val: number, mutationRate: number, prng: { nextGaussian: (m: number, s: number) => number }, min = 0, max = 1): number {
   return Math.max(min, Math.min(max, prng.nextGaussian(val, mutationRate * 0.1)))
@@ -64,8 +53,8 @@ export const ReproductionSystem: System = {
       const mr = read.mutationRate[i]
       write.x[child] = read.x[i] + prng.nextRange(-10, 10)
       write.y[child] = read.y[i] + prng.nextRange(-10, 10)
-      write.x[child] = Math.max(0, Math.min(1000, write.x[child]))
-      write.y[child] = Math.max(0, Math.min(1000, write.y[child]))
+      write.x[child] = Math.max(0, Math.min(WORLD_W, write.x[child]))
+      write.y[child] = Math.max(0, Math.min(WORLD_H, write.y[child]))
       write.vx[child] = prng.nextRange(-1, 1)
       write.vy[child] = prng.nextRange(-1, 1)
       write.energy[child] = childEnergy

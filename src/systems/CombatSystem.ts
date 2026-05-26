@@ -19,8 +19,8 @@ export const CombatSystem: System = {
       const defPow = read.defense[t] + read.spikiness[t] * 0.3 + prng.nextFloat() * 0.15
 
       if (atkPow > defPow) {
-        const stolen = Math.min(18, write.energy[t] * 0.28)
-        write.energy[t] -= stolen
+        const stolen = Math.min(18, Math.max(0, write.energy[t]) * 0.28)
+        write.energy[t] = Math.max(0, write.energy[t] - stolen)
         write.energy[a] = Math.min(100, write.energy[a] + stolen * 0.55)
         memoryStore.update(t, a, -0.2, true, false)
       } else {

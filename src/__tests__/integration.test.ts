@@ -7,6 +7,7 @@ import { FoodPool } from '../engine/FoodPool'
 import { MemoryStore } from '../engine/MemoryStore'
 import { InteractionLog } from '../engine/InteractionLog'
 import { generateBiomeMap } from '../engine/biome'
+import { deriveDiet } from '../engine/diet'
 import type { SystemRegistration } from '../engine/System'
 import type { SimEngine } from '../engine/SimEngine'
 import {
@@ -33,13 +34,6 @@ import { SpeciationSystem } from '../systems/SpeciationSystem'
 import { WorldEventSystem } from '../systems/WorldEventSystem'
 
 // --- Minimal engine factory for integration tests ---
-function deriveDiet(f: number): number {
-  if (f < 0.25) return 0
-  if (f < 0.5)  return 1
-  if (f < 0.75) return 2
-  return 3
-}
-
 function makeEngine(seed: number, blobCount = 50): SimEngine {
   const prng = new PRNG(seed)
   generateBiomeMap(seed)
@@ -66,20 +60,20 @@ function makeEngine(seed: number, blobCount = 50): SimEngine {
     writeBuf.traitFear[i] = prng.nextRange(0.1, 0.6)
     writeBuf.courage[i] = prng.nextRange(0.2, 0.8)
     writeBuf.fertility[i] = prng.nextRange(0.3, 0.7)
-    writeBuf.metabolism[i] = prng.nextRange(0.05, 0.3)
-    writeBuf.camouflage[i] = prng.nextRange(0, 0.5)
-    writeBuf.spikiness[i] = prng.nextRange(0, 0.4)
-    writeBuf.size[i] = prng.nextRange(0.5, 1.5)
+    writeBuf.metabolism[i] = prng.nextRange(0.08, 0.4)
+    writeBuf.camouflage[i] = prng.nextRange(0, 0.6)
+    writeBuf.spikiness[i] = prng.nextRange(0, 0.5)
+    writeBuf.size[i] = prng.nextRange(0.4, 1.2)
     writeBuf.dietFloat[i] = prng.nextFloat()
     writeBuf.diet[i] = deriveDiet(writeBuf.dietFloat[i])
-    writeBuf.mutationRate[i] = prng.nextRange(0.05, 0.2)
+    writeBuf.mutationRate[i] = prng.nextRange(0.05, 0.3)
     writeBuf.emotionFear[i] = 0.2
     writeBuf.emotionConfidence[i] = 0.5
     writeBuf.emotionStress[i] = 0.1
     writeBuf.emotionCuriosity[i] = 0.5
     writeBuf.parentId[i] = 0xffffffff
     writeBuf.generation[i] = 0
-    writeBuf.reproductionCooldown[i] = prng.nextRange(0, 200)
+    writeBuf.reproductionCooldown[i] = Math.floor(prng.nextRange(0, 200))
     writeBuf.species[i] = 1
     writeBuf.alive[i] = 1
     writeBuf.count++
@@ -254,7 +248,7 @@ describe('Integration: speciation after 300 ticks', () => {
     for (let t = 0; t < 300; t++) runTick(engine)
     const species = new Set<number>()
     forEachAlive(engine.readBuf, (i) => { species.add(engine.readBuf.species[i]) })
-    // With mutation, at least one speciation event should occur
+    // Population is stable; at minimum species 1 persists (actual speciation tested via SpeciationSystem unit test)
     expect(species.size).toBeGreaterThanOrEqual(1)
   })
 })

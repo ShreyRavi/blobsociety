@@ -4,6 +4,7 @@ import { WORLD_W, WORLD_H, PHERO_W, PHERO_H, PHERO_CHANNELS } from '../engine/co
 
 const BASE_RADIUS = 4
 const SPECIES_PALETTE = new Map<number, string>()
+const bySpeciesCache = new Map<number, number[]>()
 
 function speciesColor(id: number): string {
   let c = SPECIES_PALETTE.get(id)
@@ -32,6 +33,7 @@ export class CanvasRenderer {
   // Scratch canvas for pheromone overlay
   pheroCanvas: OffscreenCanvas | null = null
   pheroCtx: OffscreenCanvasRenderingContext2D | null = null
+  pheroImageData: ImageData | null = null
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas
@@ -45,6 +47,7 @@ export class CanvasRenderer {
     if (typeof OffscreenCanvas !== 'undefined') {
       this.pheroCanvas = new OffscreenCanvas(PHERO_W, PHERO_H)
       this.pheroCtx = this.pheroCanvas.getContext('2d') as OffscreenCanvasRenderingContext2D
+      this.pheroImageData = this.pheroCtx.createImageData(PHERO_W, PHERO_H)
     }
   }
 
@@ -98,28 +101,46 @@ export class CanvasRenderer {
     }
     ctx.fill()
 
-    // Blobs batched by species
+    // Blobs batched by species (reuse Map and arrays to avoid per-frame allocation)
     const { readBuf } = snapshot
-    const bySpecies = new Map<number, number[]>()
+    bySpeciesCache.forEach(arr => { arr.length = 0 })
     for (let i = 0; i < readBuf.alive.length; i++) {
       if (!readBuf.alive[i]) continue
       const s = readBuf.species[i]
-      let arr = bySpecies.get(s)
-      if (!arr) { arr = []; bySpecies.set(s, arr) }
+      let arr = bySpeciesCache.get(s)
+      if (!arr) { arr = []; bySpeciesCache.set(s, arr) }
       arr.push(i)
     }
+    const bySpecies = bySpeciesCache
+
+    const selectedSid = this.selectedBlobId !== null ? readBuf.species[this.selectedBlobId] : -1
 
     for (const [sid, blobs] of bySpecies) {
-      if (sid === (this.selectedBlobId !== null ? readBuf.species[this.selectedBlobId] : -1)) continue  // draw selected species last
+      if (sid === selectedSid) continue  // draw selected species last for z-order
       ctx.fillStyle = speciesColor(sid)
       ctx.beginPath()
       for (const i of blobs) {
-        if (i === this.selectedBlobId) continue
         const r = BASE_RADIUS * readBuf.size[i]
         ctx.moveTo(readBuf.x[i] + r, readBuf.y[i])
         ctx.arc(readBuf.x[i], readBuf.y[i], r, 0, Math.PI * 2)
       }
       ctx.fill()
+    }
+
+    // Draw selected species on top (minus the selected blob itself, drawn last)
+    if (selectedSid !== -1) {
+      const blobs = bySpecies.get(selectedSid)
+      if (blobs) {
+        ctx.fillStyle = speciesColor(selectedSid)
+        ctx.beginPath()
+        for (const i of blobs) {
+          if (i === this.selectedBlobId) continue
+          const r = BASE_RADIUS * readBuf.size[i]
+          ctx.moveTo(readBuf.x[i] + r, readBuf.y[i])
+          ctx.arc(readBuf.x[i], readBuf.y[i], r, 0, Math.PI * 2)
+        }
+        ctx.fill()
+      }
     }
 
     // Selected blob highlight
@@ -155,9 +176,9 @@ export class CanvasRenderer {
   private drawPheromone(buf: Float32Array): void {
     const ctx = this.pheroCtx
     const canvas = this.pheroCanvas
-    if (!ctx || !canvas) return
+    if (!ctx || !canvas || !this.pheroImageData) return
 
-    const imgData = ctx.createImageData(PHERO_W, PHERO_H)
+    const imgData = this.pheroImageData
     const ch = this.pheroChannel
     const pheroColors: [number, number, number][] = [
       [76, 175, 80],    // food: green

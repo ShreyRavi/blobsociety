@@ -6,6 +6,7 @@ import { FoodPool } from './FoodPool'
 import { MemoryStore } from './MemoryStore'
 import { InteractionLog } from './InteractionLog'
 import { generateBiomeMap } from './biome'
+import { deriveDiet } from './diet'
 import type { SystemRegistration } from './System'
 import {
   INITIAL_BLOB_COUNT,
@@ -74,12 +75,6 @@ export interface SimEngine {
   subscribe(cb: (snapshot: SimSnapshot) => void): () => void
 }
 
-function deriveDiet(f: number): number {
-  if (f < 0.25) return 0  // herbivore
-  if (f < 0.5)  return 1  // omnivore
-  if (f < 0.75) return 2  // carnivore
-  return 3                  // scavenger
-}
 
 function spawnInitialBlobs(engine: SimEngine): void {
   const { writeBuf: buf, prng } = engine

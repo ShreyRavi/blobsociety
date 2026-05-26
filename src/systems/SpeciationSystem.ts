@@ -21,6 +21,7 @@ const TRAIT_SCALES = [
 
 const DIM = TRAIT_SCALES.length
 const traitBuf = new Float32Array(MAX_BLOB_COUNT * DIM)
+const centBuf = new Float32Array(DIM)
 
 function getTrait(read: StateBuffer, i: number, k: number): number {
   switch (k) {
@@ -83,9 +84,6 @@ export const SpeciationSystem: System = {
     })
 
     const threshold2 = SPECIATION_DISTANCE_THRESHOLD * SPECIATION_DISTANCE_THRESHOLD
-
-    // Scratch centroid buffer for comparison
-    const centBuf = new Float32Array(DIM)
 
     forEachAlive(read, (i) => {
       const base = i * DIM

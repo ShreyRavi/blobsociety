@@ -3,7 +3,7 @@ import type { StateBuffer } from '../engine/StateBuffer'
 import type { SimEngine } from '../engine/SimEngine'
 import { forEachAlive } from '../engine/StateBuffer'
 import { PHERO_FOOD } from '../engine/PheromoneGrid'
-import { DIET_HERBIVORE, DIET_OMNIVORE, DIET_SCAVENGER } from '../engine/constants'
+import { DIET_CARNIVORE, DIET_HERBIVORE, DIET_OMNIVORE, DIET_SCAVENGER, WORLD_W, WORLD_H } from '../engine/constants'
 
 export const FoodSystem: System = {
   name: 'FoodSystem',
@@ -15,7 +15,7 @@ export const FoodSystem: System = {
 
     forEachAlive(read, (i) => {
       // Carnivores don't forage for plant food (they hunt)
-      if (read.diet[i] === 2 /* carnivore */) return  // DIET_CARNIVORE=2
+      if (read.diet[i] === DIET_CARNIVORE) return
 
       const vr = read.visionRadius[i]
       const bx = read.x[i]
@@ -48,12 +48,11 @@ export const FoodSystem: System = {
     const spawnCount = Math.floor(engine.baseFoodSpawnRate * engine.worldEventFoodMod)
     for (let s = 0; s < spawnCount; s++) {
       if (food.count >= food.alive.length) break
-      const fx = prng.nextRange(0, 1000)
-      const fy = prng.nextRange(0, 1000)
+      const fx = prng.nextRange(0, WORLD_W)
+      const fy = prng.nextRange(0, WORLD_H)
       const fv = prng.nextRange(5, 30)
       food.spawn(fx, fy, fv)
     }
   },
 }
 
-export { DIET_HERBIVORE, DIET_OMNIVORE, DIET_SCAVENGER }

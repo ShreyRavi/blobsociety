@@ -11,21 +11,24 @@ import {
   DIET_OMNIVORE,
 } from '../engine/constants'
 
-function normalize(dx: number, dy: number): [number, number] {
+let _nx = 0
+let _ny = 0
+
+function setNorm(dx: number, dy: number): void {
   const d = Math.sqrt(dx * dx + dy * dy)
-  return d > 0 ? [dx / d, dy / d] : [0, 0]
+  if (d > 0) { _nx = dx / d; _ny = dy / d } else { _nx = 0; _ny = 0 }
 }
 
-function pheroGradient(
+function setPheroGradient(
   pheromone: SimEngine['pheromone'],
   x: number,
   y: number,
   ch: number,
-): [number, number] {
+): void {
   const step = 8
   const gx = pheromone.sample(x + step, y, ch) - pheromone.sample(x - step, y, ch)
   const gy = pheromone.sample(x, y + step, ch) - pheromone.sample(x, y - step, ch)
-  return normalize(gx, gy)
+  setNorm(gx, gy)
 }
 
 export const InteractionSystem: System = {
@@ -71,8 +74,8 @@ export const InteractionSystem: System = {
         }
 
         if (found) {
-          const [nx, ny] = normalize(-threatX, -threatY)
-          vx = nx; vy = ny
+          setNorm(-threatX, -threatY)
+          vx = _nx; vy = _ny
           newInteractionLog.log({ actorId: i, targetId: -1, action: 'flee', tick, energyDelta: 0 })
           pheromone.deposit(x, y, PHERO_DANGER, 0.4)
           actionLogged = true
@@ -94,8 +97,8 @@ export const InteractionSystem: System = {
           }
         }
         if (preyIdx !== -1) {
-          const [nx, ny] = normalize(read.x[preyIdx] - x, read.y[preyIdx] - y)
-          vx = nx; vy = ny
+          setNorm(read.x[preyIdx] - x, read.y[preyIdx] - y)
+          vx = _nx; vy = _ny
           newInteractionLog.log({ actorId: i, targetId: preyIdx, action: 'hunt', tick, energyDelta: 0 })
           pheromone.deposit(x, y, PHERO_DANGER, 0.3)
           actionLogged = true
@@ -120,8 +123,8 @@ export const InteractionSystem: System = {
           }
         }
         if (rivalIdx !== -1) {
-          const [nx, ny] = normalize(read.x[rivalIdx] - x, read.y[rivalIdx] - y)
-          vx = nx; vy = ny
+          setNorm(read.x[rivalIdx] - x, read.y[rivalIdx] - y)
+          vx = _nx; vy = _ny
           newInteractionLog.log({ actorId: i, targetId: rivalIdx, action: 'fight', tick, energyDelta: 0 })
           pheromone.deposit(x, y, PHERO_TERRITORY, 0.5)
           actionLogged = true
@@ -146,8 +149,8 @@ export const InteractionSystem: System = {
           newInteractionLog.log({ actorId: i, targetId: partnerIdx, action: 'share', tick, energyDelta: gift })
           pheromone.deposit(x, y, PHERO_MATING, 0.2)
           // Wander near partner
-          const [nx, ny] = normalize(read.x[partnerIdx] - x, read.y[partnerIdx] - y)
-          vx = nx * 0.3; vy = ny * 0.3
+          setNorm(read.x[partnerIdx] - x, read.y[partnerIdx] - y)
+          vx = _nx * 0.3; vy = _ny * 0.3
           actionLogged = true
         }
       }
@@ -162,8 +165,8 @@ export const InteractionSystem: System = {
           if (trust > bestTrust) { bestTrust = trust; leadIdx = j }
         }
         if (leadIdx !== -1) {
-          const [nx, ny] = normalize(read.x[leadIdx] - x, read.y[leadIdx] - y)
-          vx = nx; vy = ny
+          setNorm(read.x[leadIdx] - x, read.y[leadIdx] - y)
+          vx = _nx; vy = _ny
           newInteractionLog.log({ actorId: i, targetId: leadIdx, action: 'follow', tick, energyDelta: 0 })
           pheromone.deposit(x, y, PHERO_TERRITORY, 0.1)
           actionLogged = true
@@ -172,9 +175,9 @@ export const InteractionSystem: System = {
 
       // --- 6. FORAGE: follow food pheromone gradient ---
       if (!actionLogged && (diet === DIET_HERBIVORE || diet === DIET_OMNIVORE) && hunger > 0.25) {
-        const [gx, gy] = pheroGradient(pheromone, x, y, PHERO_FOOD)
-        if (gx !== 0 || gy !== 0) {
-          vx = gx; vy = gy
+        setPheroGradient(pheromone, x, y, PHERO_FOOD)
+        if (_nx !== 0 || _ny !== 0) {
+          vx = _nx; vy = _ny
           newInteractionLog.log({ actorId: i, targetId: -1, action: 'forage', tick, energyDelta: 0 })
           actionLogged = true
         }
@@ -188,8 +191,8 @@ export const InteractionSystem: System = {
         const impulse = curiosity * 0.4 + 0.1
         vx = vx * 0.7 + Math.cos(angle) * impulse
         vy = vy * 0.7 + Math.sin(angle) * impulse
-        const [nx, ny] = normalize(vx, vy)
-        vx = nx; vy = ny
+        setNorm(vx, vy)
+        vx = _nx; vy = _ny
         newInteractionLog.log({ actorId: i, targetId: -1, action: 'wander', tick, energyDelta: 0 })
       }
 
