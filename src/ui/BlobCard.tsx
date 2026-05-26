@@ -27,9 +27,9 @@ export function BlobCard() {
         right: 12,
         background: 'rgba(0,0,0,0.82)',
         color: '#e0e0e0',
-        borderRadius: 10,
+        borderRadius: 8,
         padding: '12px 16px',
-        fontSize: 11,
+        fontSize: 12,
         fontFamily: 'monospace',
         width: 220,
         backdropFilter: 'blur(4px)',
@@ -40,7 +40,7 @@ export function BlobCard() {
         <div style={{ fontWeight: 700, fontSize: 13, color: '#fff' }}>Blob #{i}</div>
         <button
           onClick={() => selectBlob(null)}
-          style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14 }}
+          style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: 14, padding: '4px 8px', margin: '-4px -8px', minWidth: 32, minHeight: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
           ✕
         </button>
