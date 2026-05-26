@@ -1,6 +1,6 @@
 # Blob Society
 
-A real-time evolution simulation. Blobs eat, fight, reproduce, and go extinct. Watch natural selection play out in your browser.
+A real-time evolution simulation. Blobs eat, fight, reproduce, and go extinct. Watch natural selection play out in your browser!
 
 ## What it does
 
