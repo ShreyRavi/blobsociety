@@ -1,5 +1,7 @@
 # Blob Society
 
+Live Demo: [shreyravi.github.io/blobsociety](https://shreyravi.github.io/blobsociety/)
+
 A real-time evolution simulation. Blobs eat, fight, reproduce, and go extinct. Watch natural selection play out in your browser!
 
 ## What it does
