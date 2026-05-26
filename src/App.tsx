@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, Component, type ReactNode, type ErrorInfo } from 'react'
 import { CanvasRenderer } from './renderer/CanvasRenderer'
 import { StatsPanel } from './ui/StatsPanel'
 import { ControlSheet } from './ui/ControlSheet'
@@ -172,6 +172,26 @@ function CrashBanner({ message }: { message: string }) {
   )
 }
 
+class SimErrorBoundary extends Component<{ children: ReactNode }, { error: string | null }> {
+  state = { error: null }
+  static getDerivedStateFromError(e: Error) { return { error: e.message } }
+  componentDidCatch(_e: Error, info: ErrorInfo) { console.error('SimCanvas error:', info.componentStack) }
+  render() {
+    if (this.state.error) {
+      return (
+        <div style={{ position: 'fixed', inset: 0, background: '#0d0d1a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'monospace', color: '#e0e0e0' }}>
+          <div style={{ background: 'rgba(200,0,0,0.85)', padding: '20px 28px', borderRadius: 8, maxWidth: 400, textAlign: 'center' }}>
+            <div style={{ fontWeight: 700, marginBottom: 8 }}>Render Error</div>
+            <div style={{ opacity: 0.9, fontSize: 12, marginBottom: 10 }}>{this.state.error}</div>
+            <button onClick={() => location.reload()} style={{ background: '#7c4dff', border: 'none', color: '#fff', borderRadius: 20, padding: '6px 20px', cursor: 'pointer', fontFamily: 'monospace' }}>Reload</button>
+          </div>
+        </div>
+      )
+    }
+    return this.state.error === null ? this.props.children : null
+  }
+}
+
 export default function App() {
-  return <SimCanvas />
+  return <SimErrorBoundary><SimCanvas /></SimErrorBoundary>
 }
