@@ -88,6 +88,7 @@ function SimCanvas() {
       />
       <StatsPanel />
       {snap?.crashError && <CrashBanner message={snap.crashError} />}
+      {snap && snap.blobCount === 0 && snap.tick > 0 && !snap.crashError && <ExtinctionBanner />}
       <ControlSheet />
       <BlobCard />
       <DebugOverlay
@@ -96,6 +97,51 @@ function SimCanvas() {
         onTogglePheromone={setShowPheromone}
         onSetChannel={setPheroChannel}
       />
+    </div>
+  )
+}
+
+function ExtinctionBanner() {
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%,-50%)',
+        background: 'rgba(0,0,0,0.88)',
+        color: '#e0e0e0',
+        padding: '20px 28px',
+        borderRadius: 8,
+        fontFamily: 'monospace',
+        fontSize: 13,
+        textAlign: 'center',
+        backdropFilter: 'blur(6px)',
+        border: '1px solid #333',
+      }}
+    >
+      <div style={{ fontSize: 15, fontWeight: 700, color: '#fff', marginBottom: 6 }}>
+        All blobs have gone extinct
+      </div>
+      <div style={{ color: '#888', marginBottom: 14 }}>
+        The population did not survive. The world continues.
+      </div>
+      <button
+        onClick={() => location.reload()}
+        style={{
+          background: '#7c4dff',
+          border: 'none',
+          color: '#fff',
+          borderRadius: 20,
+          padding: '6px 20px',
+          cursor: 'pointer',
+          fontSize: 13,
+          fontFamily: 'monospace',
+          fontWeight: 600,
+        }}
+      >
+        Restart simulation
+      </button>
     </div>
   )
 }
