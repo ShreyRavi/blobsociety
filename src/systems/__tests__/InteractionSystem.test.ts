@@ -9,7 +9,6 @@ import { PRNG } from '../../engine/prng'
 import {
   DIET_CARNIVORE,
   DIET_HERBIVORE,
-  DIET_SCAVENGER,
 } from '../../engine/constants'
 import type { SimEngine } from '../../engine/SimEngine'
 

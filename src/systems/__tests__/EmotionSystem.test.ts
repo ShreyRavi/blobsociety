@@ -2,10 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { StateBuffer } from '../../engine/StateBuffer'
 import { EmotionSystem } from '../EmotionSystem'
 import { neighborLists, neighborCounts } from '../PerceptionSystem'
-import { PheromoneGrid, PHERO_DANGER, PHERO_FOOD } from '../../engine/PheromoneGrid'
+import { PheromoneGrid, PHERO_DANGER } from '../../engine/PheromoneGrid'
 import { MemoryStore } from '../../engine/MemoryStore'
 import { PRNG } from '../../engine/prng'
-import { DIET_CARNIVORE, DIET_HERBIVORE } from '../../engine/constants'
+import { DIET_CARNIVORE } from '../../engine/constants'
 import type { SimEngine } from '../../engine/SimEngine'
 
 function fakeEngine(pheromone: PheromoneGrid): SimEngine {

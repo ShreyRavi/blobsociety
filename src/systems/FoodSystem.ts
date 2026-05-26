@@ -3,7 +3,7 @@ import type { StateBuffer } from '../engine/StateBuffer'
 import type { SimEngine } from '../engine/SimEngine'
 import { forEachAlive } from '../engine/StateBuffer'
 import { PHERO_FOOD } from '../engine/PheromoneGrid'
-import { DIET_CARNIVORE, DIET_HERBIVORE, DIET_OMNIVORE, DIET_SCAVENGER, WORLD_W, WORLD_H } from '../engine/constants'
+import { DIET_CARNIVORE, WORLD_W, WORLD_H } from '../engine/constants'
 
 export const FoodSystem: System = {
   name: 'FoodSystem',
