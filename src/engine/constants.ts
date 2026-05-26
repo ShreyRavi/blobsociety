@@ -17,7 +17,8 @@ export const RAF_DT_MAX = 50
 export const REPRODUCTION_THRESHOLD = 70
 export const REPRODUCTION_COOLDOWN = 300
 export const BASE_LIFESPAN = 3000
-export const BASE_FOOD_RATE = 0.5
+export const BASE_FOOD_RATE = 2
+export const INITIAL_FOOD_COUNT = 150
 export const MEMORY_SNAPSHOT_HZ = 6
 
 // Biome IDs

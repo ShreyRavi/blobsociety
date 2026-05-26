@@ -10,6 +10,7 @@ import { deriveDiet } from './diet'
 import type { SystemRegistration } from './System'
 import {
   INITIAL_BLOB_COUNT,
+  INITIAL_FOOD_COUNT,
   WORLD_W,
   WORLD_H,
   BASE_FOOD_RATE,
@@ -191,6 +192,16 @@ function createEngine(seed: number): SimEngine {
   }
 
   spawnInitialBlobs(engine)
+
+  // Pre-populate food pool so blobs don't immediately starve
+  for (let f = 0; f < INITIAL_FOOD_COUNT; f++) {
+    engine.foodPool.spawn(
+      engine.prng.nextRange(0, WORLD_W),
+      engine.prng.nextRange(0, WORLD_H),
+      engine.prng.nextRange(5, 30),
+    )
+  }
+
   // Copy initial writeBuf → readBuf so tick() starts with valid data
   engine.readBuf.copyFrom(engine.writeBuf)
 
